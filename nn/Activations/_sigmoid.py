@@ -7,6 +7,6 @@ class Sigmoid:
         x = np.array(x)
         return 1 / (1 + np.exp(-x))
     
-    def back(self, x):
-        x = np.array(x)
-        return self.forward(x)*(1 - self.forward(x))
+    def back(self, delta):
+        delta = np.array(delta)
+        return self.forward(delta)*(1 - self.forward(delta))

@@ -7,23 +7,22 @@ class CrossEntropy:
         self.softmax = Softmax()
 
     def forward(self, x, y):
+        self.x = x
+        self.y = y
+
         softmax_vals = self.softmax.forward(x)
         epsilon = 1e-10
-        softmax_vals = np.clip(softmax_vals, epsilon, 1 - epsilon)
+        self.softmax_vals = np.clip(softmax_vals, epsilon, 1 - epsilon)
 
         one_hot_labels = np.zeros_like(softmax_vals)
+        one_hot_labels[np.arange(len(y)), y] = 1
+
+        self.val = - np.sum(one_hot_labels * np.log(softmax_vals))
         
-        one_hot_labels[np.arange(len(y)), y] = 1
+        return self.val
 
-        loss = - np.sum(one_hot_labels * np.log(softmax_vals))
-        return loss
+    def back(self):
+        one_hot_labels = np.zeros_like(self.softmax_vals)
+        one_hot_labels[np.arange(len(self.y)), self.y] = 1
 
-    def back(self, x, y):
-        softmax_vals = self.softmax.forward(x)
-        epsilon = 1e-10
-        softmax_vals = np.clip(softmax_vals, epsilon, 1 - epsilon)
-
-        one_hot_labels = np.zeros_like(softmax_vals)
-        one_hot_labels[np.arange(len(y)), y] = 1
-
-        return softmax_vals - one_hot_labels
+        return self.softmax_vals - one_hot_labels

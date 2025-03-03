@@ -9,9 +9,9 @@ class ReLU:
 
         return np.maximum(0, x)
     
-    def back(self, x):
-        x = np.array(x)
+    def back(self, delta):
+        delta = np.array(delta)
 
-        return x > 0
+        return delta > 0
 
         

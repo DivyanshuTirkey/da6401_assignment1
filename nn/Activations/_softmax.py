@@ -11,12 +11,12 @@ class Softmax:
         exp_out /= np.sum(exp_out, axis=1, keepdims=True)
         return exp_out
 
-    def back(self, x):
-        x = np.array(x)
+    def back(self, delta):
+        delta = np.array(delta)
 
-        batch_size, nclasses = x.shape
+        batch_size, nclasses = delta.shape
 
-        s = self.forward(x)
+        s = self.forward(delta)
 
         jacobian = np.zeros((batch_size, nclasses, nclasses))
 

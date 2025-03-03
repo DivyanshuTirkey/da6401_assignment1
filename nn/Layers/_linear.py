@@ -5,11 +5,24 @@ class Linear:
         self.in_neurons = in_neurons
         self.out_neurons = out_neurons
 
-        self.weights = np.zeros((in_neurons, out_neurons))
+        self.weights = np.zeros((out_neurons, in_neurons))
         if bias:
             self.bias = np.ones(out_neurons)
         else:
             self.bias = np.zeros(out_neurons)
 
     def forward(self, x):
-        return self.weights.T @ x + self.bias
+        self.input = x
+        return x @ self.weights.T + self.bias
+    
+    def back(self, delta):
+        self.grads = delta.T @ self.input
+        self.grads_bias = np.sum(delta, axis=0)
+        delta = delta @ self.weights
+
+        return delta
+
+
+
+
+

@@ -8,6 +8,6 @@ class Identity:
         x = np.array(x)
         return x
     
-    def back(self, x):
-        x = np.array(x)
-        return np.ones(x.shape)
+    def back(self, delta):
+        delta = np.array(delta)
+        return np.ones(delta.shape)
