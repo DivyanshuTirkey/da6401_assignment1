@@ -10,4 +10,5 @@ class Identity:
     
     def back(self, delta):
         delta = np.array(delta)
-        return np.ones(delta.shape)
+        self.grads = np.ones(delta.shape)
+        return self.grads

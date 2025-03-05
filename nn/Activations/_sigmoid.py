@@ -9,4 +9,6 @@ class Sigmoid:
     
     def back(self, delta):
         delta = np.array(delta)
-        return self.forward(delta)*(1 - self.forward(delta))
+        self.grads = self.forward(delta)*(1 - self.forward(delta))
+
+        return self.grads

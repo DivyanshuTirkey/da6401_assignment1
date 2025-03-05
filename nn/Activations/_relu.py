@@ -11,7 +11,7 @@ class ReLU:
     
     def back(self, delta):
         delta = np.array(delta)
-
-        return delta > 0
+        self.grads = delta > 0
+        return self.grads
 
         

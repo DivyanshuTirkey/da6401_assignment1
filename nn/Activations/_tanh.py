@@ -10,4 +10,5 @@ class Tanh:
     
     def back(self, delta):
         delta = np.array(delta)
-        return 1 - np.tanh(delta)**2
+        self.grads = 1 - np.tanh(delta)**2
+        return self.grads

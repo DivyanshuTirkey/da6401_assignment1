@@ -5,8 +5,12 @@ class MSE:
         pass
 
     def forward(self, x, y):
-        return np.mean((y - x)**2)
+        self.x = x
+        self.y = y
 
-    def back(self, x, y):
-        batch_size = x.shape[0]
-        return -2 * (y-x) / batch_size
+        self.val = np.mean((y - x)**2)
+        return self.val
+
+    def back(self):
+        batch_size = self.x.shape[0]
+        return -2 * (self.y - self.x) / batch_size

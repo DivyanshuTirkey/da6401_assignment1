@@ -5,6 +5,7 @@ class Flatten:
         self.shape = None
 
     def forward(self, x):
+        self.input = x
         x = np.array(x)
         batch_size = x.shape[0]
         out_shape = np.prod(x.shape[1:])
