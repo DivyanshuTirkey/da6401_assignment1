@@ -5,10 +5,7 @@ class Identity:
         pass
 
     def forward(self, x):
-        x = np.array(x)
-        return x
+        return np.array(x)
     
     def back(self, delta):
-        delta = np.array(delta)
-        self.grads = np.ones(delta.shape)
-        return self.grads
+        return delta

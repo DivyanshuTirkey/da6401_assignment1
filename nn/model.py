@@ -2,21 +2,31 @@ import numpy as np
 
 
 class Model:
-    def __init__(self, layers: list):
+    def __init__(self, layers: list, initializer=None):
         self.layers = layers
-        self.params = []
+        self.params = {'weights': [], 'bias': []}
+        self.initializer = initializer
+
+        self._initialize()
+        self._collect_params()
+
+    def _initialize_layer(self, layer):
+        if self.initializer == 'random':
+            layer.weights = np.random.rand(*layer.weights.shape) * 2 - 1
+
+        elif self.initializer == 'xavier':
+            layer.weights = np.random.normal(0, np.sqrt(2 / (layer.in_neurons + layer.out_neurons)), layer.weights.shape)
+    
+    def _initialize(self):
+        for layer in self.layers:
+            if hasattr(layer, 'weights') and layer.weights is not None:
+                self._initialize_layer(layer)
 
     def _collect_params(self):
         for layer in self.layers:
-            if hasattr(layer, 'weights'):
-                self.params.append((layer.weights, layer.bias if hasattr(layer, 'bias') else None))
-            else:
-                self.params.append(None)
+            self.params['weights'].append(layer.weights.view() if hasattr(layer, 'weights') else np.nan)
+            self.params['bias'].append(layer.bias.view() if hasattr(layer, 'bias') else np.nan)
     
-    def update_params(self):
-        for id in range(len(self.params)):
-            if self.params[id] is not None:
-                self.params[id] = self.layers[id].weights
 
     def forward(self, x):
         for layer in self.layers:
@@ -27,5 +37,4 @@ class Model:
         delta = loss.back()
         for layer in reversed(self.layers):
             delta = layer.back(delta)
-
 

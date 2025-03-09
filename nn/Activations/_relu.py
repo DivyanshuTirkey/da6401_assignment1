@@ -6,12 +6,13 @@ class ReLU:
 
     def forward(self, x):
         x = np.array(x)
+        self.x = x
 
         return np.maximum(0, x)
     
     def back(self, delta):
-        delta = np.array(delta)
-        self.grads = delta > 0
+        mask = self.x > 0
+        self.grads = delta * mask
         return self.grads
 
         

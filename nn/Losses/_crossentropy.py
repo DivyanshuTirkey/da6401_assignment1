@@ -1,5 +1,4 @@
 import numpy as np
-
 from ..Activations import Softmax
 
 class CrossEntropy:
@@ -10,19 +9,28 @@ class CrossEntropy:
         self.x = x
         self.y = y
 
-        softmax_vals = self.softmax.forward(x)
-        epsilon = 1e-10
-        self.softmax_vals = np.clip(softmax_vals, epsilon, 1 - epsilon)
+        # Numerically stable softmax calculation
+        logits_shifted = x - np.max(x, axis=1, keepdims=True)
+        exp_logits = np.exp(logits_shifted)
+        self.softmax_vals = exp_logits / np.sum(exp_logits, axis=1, keepdims=True)
 
-        one_hot_labels = np.zeros_like(softmax_vals)
-        one_hot_labels[np.arange(len(y)), y] = 1
+        # Clip to avoid log(0)
+        epsilon = 1e-12
+        clipped_softmax_vals = np.clip(self.softmax_vals, epsilon, 1. - epsilon)
 
-        self.val = - np.sum(one_hot_labels * np.log(softmax_vals))
+        # Compute cross-entropy loss directly using indexing (no need for one-hot encoding explicitly)
+        correct_logprobs = -np.log(clipped_softmax_vals[np.arange(len(y)), y])
+        
+        self.val = np.mean(correct_logprobs)
         
         return self.val
 
     def back(self):
-        one_hot_labels = np.zeros_like(self.softmax_vals)
-        one_hot_labels[np.arange(len(self.y)), self.y] = 1
+        batch_size = len(self.y)
 
-        return self.softmax_vals - one_hot_labels
+        # Gradient computation simplified (softmax - one_hot_labels)
+        grad = self.softmax_vals.copy()
+        grad[np.arange(batch_size), self.y] -= 1
+        grad /= batch_size
+        
+        return grad

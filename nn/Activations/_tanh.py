@@ -5,10 +5,9 @@ class Tanh:
         pass
 
     def forward(self, x):
-        x = np.array(x)
-        return np.tanh(x)
+        self.x = x
+        self.tanh_out = np.tanh(self.x)
+        return self.tanh_out
     
     def back(self, delta):
-        delta = np.array(delta)
-        self.grads = 1 - np.tanh(delta)**2
-        return self.grads
+        return delta * (1 - self.tanh_out**2)

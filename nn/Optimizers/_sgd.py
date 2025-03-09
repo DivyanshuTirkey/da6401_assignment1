@@ -10,9 +10,8 @@ class SGD:
     def step(self):
         for layer in self.model.layers:
             if hasattr(layer, 'weights'):
-                layer.weights -= layer.grads * self.lr
-            if hasattr(layer, 'grads_bias'):
-                    layer.bias -= layer.grads_bias * self.lr
+                layer.weights -= self.lr * layer.grads 
 
-        self.model.update_params()
+            if hasattr(layer, 'grads_bias'):
+                layer.bias -= self.lr * layer.grads_bias
     

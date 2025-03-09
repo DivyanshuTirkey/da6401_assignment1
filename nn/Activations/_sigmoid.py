@@ -1,14 +1,17 @@
 import numpy as np
+
 class Sigmoid:
     def __init__(self):
         pass
 
     def forward(self, x):
-        x = np.array(x)
-        return 1 / (1 + np.exp(-x))
+        self.x = x
+        self.sigmoid = np.where(
+            x >= 0,
+            1 / (1 + np.exp(-x)),
+            np.exp(x) / (1 + np.exp(x))
+        )
+        return self.sigmoid
     
     def back(self, delta):
-        delta = np.array(delta)
-        self.grads = self.forward(delta)*(1 - self.forward(delta))
-
-        return self.grads
+        return delta * self.sigmoid * (1 - self.sigmoid)

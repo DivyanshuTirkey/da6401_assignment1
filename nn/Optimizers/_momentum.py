@@ -25,11 +25,11 @@ class MomentumSGD:
     def step(self):
         for id, layer in enumerate(self.model.layers):
             if hasattr(layer, 'weights'):
-                self.u[id] = self.beta * self.u[id] + layer.grads
-                layer.weights -= self.u[id] * self.lr
+
+                self.u[id] = self.beta * self.u[id] + (1 - self.beta) * layer.grads
+                layer.weights -= self.lr * self.u[id]
+
             if hasattr(layer, 'grads_bias'):
-                self.u_bias[id] = self.beta * self.u_bias[id] + layer.grads_bias
-                layer.bias -= self.u_bias[id] * self.lr
-
-        self.model.update_params()
-
+                
+                self.u_bias[id] = self.beta * self.u_bias[id] + (1 - self.beta) * layer.grads_bias
+                layer.bias -= self.lr * self.u_bias[id]

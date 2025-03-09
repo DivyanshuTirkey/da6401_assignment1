@@ -3,9 +3,8 @@ from .. import Model
 
 
 class NAG:
-    def __init__(self, model: Model, loss, lr=0.1, beta=0.5):
+    def __init__(self, model: Model, lr=0.1, beta=0.5):
         self.model = model
-        self.loss = loss
         self.beta = beta
         self.lr = lr
 
@@ -16,41 +15,31 @@ class NAG:
         self.u_bias = []
 
         for layer in self.model.layers:
-            if hasattr(layer, 'weights'):
-                self.u.append(np.zeros_like(layer.weights))
-                self.weights.append(layer.weights)
-            else:
-                self.u.append(None)
-                self.weights.append(None)
+            self.u.append(np.zeros_like(layer.weights) if hasattr(layer, 'weights') else None)
+            self.weights.append(np.zeros_like(layer.weights) if hasattr(layer, 'weights') else None)
 
-            if hasattr(layer, 'bias'):
-                self.u_bias.append(np.zeros_like(layer.bias))
-                self.bias.append(layer.bias)
-            else:
-                self.u_bias.append(None)
-                self.bias.append(None)
+            self.u_bias.append(np.zeros_like(layer.bias) if hasattr(layer, 'bias') else None)
+            self.bias.append(np.zeros_like(layer.bias) if hasattr(layer, 'bias') else None)
 
-    def step(self, x, y):
-
+    def pre_step(self):
         for id, layer in enumerate(self.model.layers):
             if hasattr(layer, 'weights'):
-                self.weights[id] = layer.weights
+                self.weights[id] = layer.weights.copy()
                 layer.weights -= self.beta * self.u[id]
-            if hasattr(layer, "bias"):
-                self.bias[id] = layer.bias
-                layer.bias -= self.beta * self.u_bias[id]
-        
-        loss = self.loss.forward(self.model.forward(x), y)
-        self.model.backward(self.loss)
 
+            if hasattr(layer, "bias"):
+                self.bias[id] = layer.bias.copy()
+                layer.bias -= self.beta * self.u_bias[id]
+
+    def step(self):
         for id, layer in enumerate(self.model.layers):
             if hasattr(layer, 'weights'):
-                self.u[id] = self.beta * self.u[id] + layer.grads
+
+                self.u[id] = self.beta * self.u[id] + (1 - self.beta) * layer.grads
                 layer.weights = self.weights[id] - self.u[id] * self.lr
 
             if hasattr(layer, 'grads_bias'):
-                self.u_bias[id] = self.beta * self.u_bias[id] + layer.grads_bias
-                layer.bias = self.bias[id] - self.u_bias[id] * self.lr
 
-        self.model.update_params()
+                self.u_bias[id] = self.beta * self.u_bias[id] + (1 - self.beta) * layer.grads_bias
+                layer.bias = self.bias[id] - self.u_bias[id] * self.lr
 

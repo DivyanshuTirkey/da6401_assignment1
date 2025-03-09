@@ -12,12 +12,12 @@ class Linear:
             self.bias = np.zeros(out_neurons)
 
     def forward(self, x):
-        self.input = x
-        return x @ self.weights.T + self.bias
+        self.input = np.clip(x, -1e10, 1e10)
+        return self.input @ self.weights.T + self.bias
     
     def back(self, delta):
-        self.grads = delta.T @ self.input
-        self.grads_bias = np.sum(delta, axis=0)
+        self.grads = (delta.T @ self.input) / self.input.shape[0]
+        self.grads_bias = np.sum(delta, axis=0) / self.input.shape[0]
         delta = delta @ self.weights
 
         return delta

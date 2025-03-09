@@ -8,30 +8,21 @@ class Softmax:
         x = np.array(x)
         shifted_out = x - np.max(x, axis=1, keepdims=True)
         exp_out = np.exp(shifted_out)
-        exp_out /= np.sum(exp_out, axis=1, keepdims=True)
+        self.softmax_out = exp_out / np.sum(exp_out, axis=1, keepdims=True)
 
-        return exp_out
+        return self.softmax_out
 
     def back(self, delta):
-        delta = np.array(delta)
-
         batch_size, nclasses = delta.shape
+        grad_input = np.zeros_like(delta)
 
-        s = self.forward(delta)
+        for i in range(batch_size):
+            softmax_vector = self.softmax_out[i].reshape(-1, 1) 
+            jacobian = np.diagflat(softmax_vector) - np.dot(softmax_vector, softmax_vector.T)  
+            
+            grad_input[i] = np.dot(jacobian, delta[i])
 
-        jacobian = np.zeros((batch_size, nclasses, nclasses))
-
-        for id in range(batch_size):
-            for i in range(nclasses):
-                for j in range(nclasses):
-                    if i == j:
-                        jacobian[id, i, j] = s[id, i] - s[id, i] * s[id, j]
-                    else:
-                        jacobian[id, i, j] = - s[id, i] * s[id, j]
-        
-        self.grads = jacobian
-
-        return self.grads
+        return grad_input
 
 
 
