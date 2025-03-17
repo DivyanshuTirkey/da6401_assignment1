@@ -51,3 +51,5 @@ class Adam:
                 v_bias_  = self.v_bias[id] / (1 - self.beta2 ** self.t)
 
                 layer.bias -= self.lr * m_bias_  / (np.sqrt(v_bias_) + self.eps)
+
+        self.model.update_params()

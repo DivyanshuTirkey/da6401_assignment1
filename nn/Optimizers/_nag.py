@@ -3,10 +3,11 @@ from .. import Model
 
 
 class NAG:
-    def __init__(self, model: Model, lr=0.1, beta=0.5):
+    def __init__(self, model: Model, lr=0.1, beta=0.5, weight_decay=0.0):
         self.model = model
         self.beta = beta
         self.lr = lr
+        self.weight_decay = weight_decay
 
         self.weights = []
         self.bias = []
@@ -35,11 +36,12 @@ class NAG:
         for id, layer in enumerate(self.model.layers):
             if hasattr(layer, 'weights'):
 
-                self.u[id] = self.beta * self.u[id] + (1 - self.beta) * layer.grads
+                grad_w_reg = layer.grads + self.weight_decay * layer.weights
+                self.u[id] = self.beta * self.u[id] + (1 - self.beta)  * grad_w_reg
                 layer.weights = self.weights[id] - self.u[id] * self.lr
 
             if hasattr(layer, 'grads_bias'):
 
                 self.u_bias[id] = self.beta * self.u_bias[id] + (1 - self.beta) * layer.grads_bias
                 layer.bias = self.bias[id] - self.u_bias[id] * self.lr
-
+        self.model.update_params()

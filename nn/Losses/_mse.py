@@ -10,9 +10,9 @@ class MSE:
         one_hot_labels[np.arange(len(y)), y] = 1
         self.y = one_hot_labels
 
-        self.val = np.mean((self.y - self.x) ** 2)
+        self.val = np.mean((self.y - self.x) ** 2) / 2
         return self.val
 
     def back(self):
         batch_size = self.x.shape[0]
-        return -2 * (self.y - self.x) / batch_size
+        return -(self.y - self.x) / batch_size

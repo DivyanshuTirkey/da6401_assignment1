@@ -9,7 +9,7 @@ class Nadam:
         self.lr = lr
         self.eps = eps
         self.weight_decay = weight_decay
-        self.t = 0  # Initialize timestep
+        self.t = 0 
 
         self.m = []
         self.v = []
@@ -23,37 +23,30 @@ class Nadam:
             self.v_bias.append(np.zeros_like(layer.bias) if hasattr(layer, 'bias') else None)
 
     def step(self):
-        self.t += 1  # Increment timestep at the beginning
+        self.t += 1 
 
         for id, layer in enumerate(self.model.layers):
             if hasattr(layer, 'grads') and hasattr(layer, 'weights'):
-                # Update biased first moment estimate (momentum)
                 self.m[id] = self.beta1 * self.m[id] + (1 - self.beta1) * layer.grads
-                # Update biased second raw moment estimate (RMS term)
                 self.v[id] = self.beta2 * self.v[id] + (1 - self.beta2) * (layer.grads ** 2)
 
-                # Compute bias-corrected moment estimates
                 m_hat = self.m[id] / (1 - self.beta1 ** self.t)
                 v_hat = self.v[id] / (1 - self.beta2 ** self.t)
 
                 # Nadam modification: Nesterov accelerated gradient
                 m_nadam = self.beta1 * m_hat + (1 - self.beta1) * layer.grads / (1 - self.beta1 ** self.t)
 
-                # Update weights with weight decay
                 layer.weights -= self.lr * (m_nadam / (np.sqrt(v_hat) + self.eps) + self.weight_decay * layer.weights)
 
             if hasattr(layer, 'grads_bias') and hasattr(layer, 'bias'):
-                # Update biased first moment estimate for bias
                 self.m_bias[id] = self.beta1 * self.m_bias[id] + (1 - self.beta1) * layer.grads_bias
-                # Update biased second raw moment estimate for bias
                 self.v_bias[id] = self.beta2 * self.v_bias[id] + (1 - self.beta2) * (layer.grads_bias ** 2)
 
-                # Compute bias-corrected moment estimates
                 m_hat_bias = self.m_bias[id] / (1 - self.beta1 ** self.t)
                 v_hat_bias = self.v_bias[id] / (1 - self.beta2 ** self.t)
 
                 # Nadam modification for bias
                 m_nadam_bias = self.beta1 * m_hat_bias + (1 - self.beta1) * layer.grads_bias / (1 - self.beta1 ** self.t)
 
-                # Update bias (No weight decay on biases)
                 layer.bias -= self.lr * m_nadam_bias / (np.sqrt(v_hat_bias) + self.eps)
+        self.model.update_params()

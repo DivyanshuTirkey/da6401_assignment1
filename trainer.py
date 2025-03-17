@@ -1,5 +1,5 @@
 import numpy as np
-from keras.datasets import fashion_mnist, mnist
+from utils import *
 
 from nn import Model
 from nn.Layers import *
@@ -10,10 +10,13 @@ from nn.Optimizers import *
 
 
 class Trainer:
-    def __init__(self, num_layers: int, hidden_size: list[int], activation: str, init: str|None, loss: str, optimizer: str, epochs: int, lr: float|None, batch_size: int, x_train, y_train, x_val, y_val, num_classes, momentum: float|None=None, beta: float|None=None, beta1: float|None=None, beta2: float|None=None, weight_decay: float|None=0.0, eps: float|None=None, class_names = None):
+    def __init__(self, num_layers: int, hidden_size: list[int]|int, activation: str, init: str|None, loss: str, optimizer: str, epochs: int, lr: float|None, batch_size: int, x_train, y_train, x_val, y_val, num_classes, momentum: float|None=None, beta: float|None=None, beta1: float|None=None, beta2: float|None=None, weight_decay: float|None=0.0, eps: float|None=None, class_names = None):
 
         self.num_layers = num_layers
-        self.hidden_size = hidden_size
+        if isinstance(hidden_size, int):
+            self.hidden_size = [hidden_size for _ in range(self.num_layers)]
+        else:
+            self.hidden_size = hidden_size
         self.activation = activation
         self.loss = loss
         self.optimizer = optimizer
@@ -43,21 +46,23 @@ class Trainer:
 
     def get_optimizer(self):
         if self.optimizer == 'sgd':
-            return SGD(model=self.model, lr=self.lr)
+            return SGD(model=self.model, lr=self.lr, weight_decay=self.weight_decay)
         if self.optimizer == 'momentum':
-            return MomentumSGD(model=self.model, lr=self.lr, beta=self.momentum)
+            return MomentumSGD(model=self.model, lr=self.lr, beta=self.momentum, weight_decay=self.weight_decay)
         if self.optimizer == 'nag':
-            return NAG(model=self.model, lr=self.lr, beta=self.momentum)
+            return NAG(model=self.model, lr=self.lr, beta=self.momentum, weight_decay=self.weight_decay)
         if self.optimizer == 'rmsprop':
-            print(self.beta)
-            return RMSProp(model=self.model, lr=self.lr, beta=self.beta, eps=self.eps)
+            return RMSProp(model=self.model, lr=self.lr, beta=self.beta, eps=self.eps, weight_decay=self.weight_decay)
         if self.optimizer == 'adam':
             return Adam(model=self.model, lr=self.lr, beta1=self.beta1, beta2=self.beta, eps=self.eps, weight_decay=self.weight_decay)
         if self.optimizer == 'nadam':
             return Nadam(model=self.model, lr=self.lr, beta1=self.beta1, beta2=self.beta, eps=self.eps, weight_decay=self.weight_decay)
 
     def get_loss(self):
-        return MSE() if self.loss == 'mse' else CrossEntropy()
+        if self.loss == 'mse':
+            return MSE() 
+        elif self.loss == 'cross_entropy':
+            return CrossEntropy()
 
     def get_activation(self):
         if self.activation == 'ReLU':
@@ -80,9 +85,6 @@ class Trainer:
             out = self.hidden_size[i]
 
         layers.append(Linear(out, self.num_classes))
-
-        if self.loss == 'mse':
-            layers.append(Identity())
         
         model = Model(layers=layers, initializer=self.init)
         return model
@@ -103,7 +105,10 @@ class Trainer:
 
             train_loss = 0
             val_loss = 0
+            train_acc = 0
+            val_acc = 0
             
+            itr = 0
             for x_batch, y_batch in train_itr:
                 # NAG pre-step to calculate and assign lookahead-weights
                 if self.optimizer == 'nag':
@@ -115,14 +120,25 @@ class Trainer:
                 self.model.backward(self.loss_fn)
                 self.optimizer_fn.step()
                 train_loss +=  loss_val
+                train_acc += accuracy(out, y_batch)
+                itr += 1
             
+            train_acc /= itr
+
+            itr = 0
             for x_valb, y_valb in val_itr:
                 out = self.model.forward(x_valb)
                 loss_val = self.loss_fn.forward(out, y_valb)
 
                 val_loss += loss_val
+                val_acc += accuracy(out, y_valb)
+                itr += 1
+            
+            val_acc /= itr
 
-            print(f"EPOCH:{epoch + 1} Train loss:{train_loss} Val loss:{val_loss}")
+            print(f"EPOCH:{epoch + 1} Train loss:{train_loss} Val loss:{val_loss} Train acc:{train_acc:.2f} Val acc:{val_acc:.2f}")
+
+            yield epoch+1, train_loss, val_loss, train_acc, val_acc
 
 def split_data(x,y, split=0.1):
     split_size = int(x.shape[0] * split)
@@ -147,10 +163,3 @@ def get_dataset(dataset):
     
 
 
-if __name__ == '__main__':
-    x_train, y_train, x_test, y_test, class_names = get_dataset('fashion_mnist')
-    (x_train, y_train), (x_val, y_val) = split_data(x_train, y_train)
-
-    trainer = Trainer(3,[40,60,80], 'ReLU', 'random', 'crossentropy', 'momentum', 100, 0.001, 64, x_train, y_train, x_val, y_val, 10, 0.9, 0.9, 0.9, 0.9, 0.2, 1e-8, class_names=class_names)
-
-    trainer.train()
