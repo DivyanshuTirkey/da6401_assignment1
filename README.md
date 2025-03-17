@@ -74,8 +74,8 @@ This project implements a custom feedforward neural network for the **Fashion MN
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/DivyanshuTirkey/DeepLearning_Assignment_1.git
-   cd DeepLearning_Assignment_1
+   git clone https://github.com/DivyanshuTirkey/da6401_assignment1.git
+   cd da6401_assignment1
    ```
 
 2. Install required dependencies:
